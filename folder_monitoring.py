@@ -1,21 +1,20 @@
 import os
 import time
-import logging
+from loguru import logger
 
 
 def get_folder_state(folder_path):
     """Возвращает текущее состояние папки в виде словаря: {файл: время изменения}"""
     folder_state = {}
 
-    for root, dirs, files in os.walk(folder_path):
-        for name in files:
-            file_path = os.path.join(root, name)
-            try:
+    try:
+        for name in os.listdir(folder_path):
+            file_path = os.path.join(folder_path, name)
+            if os.path.isfile(file_path):
                 file_mtime = os.path.getmtime(file_path)
                 folder_state[file_path] = file_mtime
-            except FileNotFoundError:
-
-                continue
+    except FileNotFoundError:
+        logger.error(f"Папка {folder_path} не найдена.")
 
     return folder_state
 
@@ -25,9 +24,7 @@ def has_folder_changed(folder_path, previous_state=None):
     current_state = get_folder_state(folder_path)
 
     if previous_state is None:
-
         return False, current_state, []
-
 
     changed_files = []
 
@@ -36,7 +33,6 @@ def has_folder_changed(folder_path, previous_state=None):
             changed_files.append((file_path, "deleted"))
         elif current_state[file_path] != mtime:
             changed_files.append((file_path, "modified"))
-
 
     for file_path in current_state:
         if file_path not in previous_state:
@@ -47,29 +43,27 @@ def has_folder_changed(folder_path, previous_state=None):
 
 
 def monitor_folder(folder_path, interval=10):
-    """Отслеживает изменения в папке и логирует их"""
-    logging.basicConfig(
-        filename='folder_changes.log',
-        level=logging.INFO,
-        format='%(asctime)s - %(levelname)s - %(message)s'
-    )
+    """Отслеживает изменения в папке и логирует их через loguru"""
 
-    logging.info(f"Monitoring: {folder_path}")
+    logger.add("folder_changes.log", format="{time} {level} {message}", level="INFO")
+
+    logger.info(f"Начало мониторинга папки: {folder_path}")
 
     previous_state = None
 
     while True:
         is_changed, new_state, changes = has_folder_changed(folder_path, previous_state)
         if is_changed:
-            logging.info("There were changes::")
+            logger.info("Обнаружены изменения в папке:")
             for file, change_type in changes:
-                logging.info(f"File {file} was {change_type}")
+                logger.info(f"Файл {file} был {change_type}")
         else:
-            logging.info("There were not any changes")
+            logger.info("Изменений не обнаружено")
 
         previous_state = new_state
 
         time.sleep(interval)
+
 
 
 folder_path = "/home/nikitaermakov/dev/synch_with_yandex_drive/test_dir"
