@@ -26,19 +26,19 @@ class SyncController(ABC):
 class SyncYandexController(SyncController):
     action_map = {
         "new": {
-            "method": "sync_new_file",
+            "method": "load",
             "success_code": 201,
             "success_message": "File uploaded",
             "error_message": "Upload error"
         },
         "modified": {
-            "method": "sync_updated_file",
+            "method": "reload",
             "success_code": 201,
             "success_message": "Cloud updated",
             "error_message": "Update error"
         },
         "deleted": {
-            "method": "sync_deleted_file",
+            "method": "delete",
             "success_code": 204,
             "success_message": "File deleted",
             "error_message": "Deletion error",

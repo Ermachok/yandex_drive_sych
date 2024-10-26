@@ -12,19 +12,19 @@ class CloudSync(ABC):
         print(f"Connected to {cloud_service_name} cloud.")
 
     @abstractmethod
-    def sync_new_file(self, file):
+    def load(self, file):
         pass
 
     @abstractmethod
-    def sync_updated_file(self, file_path: str):
+    def reload(self, file_path: str):
         pass
 
     @abstractmethod
-    def sync_deleted_file(self, file_path: str):
+    def delete(self, file_path: str):
         pass
 
     @abstractmethod
-    def get_info(self, file_path: str):
+    def get_info(self):
         pass
 
 
@@ -52,7 +52,7 @@ class YandexDriveCloud(CloudSync):
         return upload_link
 
 
-    def sync_new_file(self, file_path: str) -> Response:
+    def load(self, file_path: str) -> Response:
         upload_link = self.get_upload_url(file_path)
 
         with open(file_path, 'rb') as f:
@@ -61,11 +61,11 @@ class YandexDriveCloud(CloudSync):
         return upload_response
 
 
-    def sync_updated_file(self, file_path: str) -> Response:
-        return self.sync_new_file(file_path)
+    def reload(self, file_path: str) -> Response:
+        return self.load(file_path)
 
 
-    def sync_deleted_file(self, file_path: str) -> Response:
+    def delete(self, file_path: str) -> Response:
         file_name = os.path.basename(file_path)
         deleting_path = f'{self.yandex_folder}/{file_name}'
 
@@ -77,5 +77,5 @@ class YandexDriveCloud(CloudSync):
         return delete_response
 
 
-    def get_info(self, file_path: str):
+    def get_info(self):
         pass
