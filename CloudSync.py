@@ -35,6 +35,7 @@ class YandexDriveCloud(CloudSync):
         super().__init__(cloud_service_name)
         self.api_token = api_token
         self.yandex_folder = yandex_drive_folder
+        self.headers = {'Authorization': f'OAuth {self.api_token}'}
 
         self.api_url = 'https://cloud-api.yandex.net/v1/disk/resources'
 
@@ -45,8 +46,7 @@ class YandexDriveCloud(CloudSync):
         downloading_path = f'{self.yandex_folder}/{file_name}'
 
         params = {'path': downloading_path, 'overwrite': 'true'}
-        headers = {'Authorization': f'OAuth {self.api_token}'}
-        response = requests.get(upload_url_request, headers=headers, params=params)
+        response = requests.get(upload_url_request, headers=self.headers, params=params)
         upload_link = response.json().get('href')
 
         return upload_link
@@ -70,12 +70,21 @@ class YandexDriveCloud(CloudSync):
         deleting_path = f'{self.yandex_folder}/{file_name}'
 
         params = {'path': deleting_path, 'permanently': 'True'}
-        headers = {'Authorization': f'OAuth {self.api_token}'}
 
-        delete_response = requests.delete(self.api_url, headers=headers, params=params)
+        delete_response = requests.delete(self.api_url, headers=self.headers, params=params)
 
         return delete_response
 
 
     def get_info(self):
         pass
+
+
+    def get_info(self, path):
+        """Get metadata"""
+        params = {"path": path}
+        response = requests.get(self.api_url, headers=self.headers, params=params)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            response.raise_for_status()

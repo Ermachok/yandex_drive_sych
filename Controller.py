@@ -75,6 +75,15 @@ class SyncYandexController(SyncController):
             except Exception as e:
                 logger.error(f"[{self.service_name}] Error handling {change_type} for {file_path}: {e}")
 
+    def start(self):
+        logger.info(f"[{self.service_name}] Starting folder monitoring and sync process.")
+        self._sync_initial_files()
+        self.folder_monitor.start_monitoring(self.handle_changes)
+
+    def stop(self):
+        logger.info(f"[{self.service_name}] Stopping folder monitoring and sync process.")
+        self.folder_monitor.stop_monitoring()
+
     def _process_response(self, response, action, file_path):
         if response.status_code == action["success_code"]:
             logger.info(f"[{self.service_name}] {action['success_message']} for {file_path}.")
@@ -87,11 +96,7 @@ class SyncYandexController(SyncController):
             logger.info(
                 f"[{self.service_name}] {action['error_message']} for {file_path}: {response.status_code}, {response.json()}.")
 
-    def start(self):
-        logger.info(f"[{self.service_name}] Starting folder monitoring and sync process.")
-        self.folder_monitor.start_monitoring(self.handle_changes)
-
-    def stop(self):
-        logger.info(f"[{self.service_name}] Stopping folder monitoring and sync process.")
-        self.folder_monitor.stop_monitoring()
-
+    def _sync_initial_files(self):
+        logger.info('Synchronizing files')
+        current_files = self.folder_monitor.get_folder_state()
+        self.cloud_sync.get_file_me
