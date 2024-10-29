@@ -1,6 +1,7 @@
 from typing import List, Tuple
 from loguru import logger
 from abc import ABC, abstractmethod
+import os
 
 from CloudSync import CloudSync
 from FolderMonitor import FolderMonitor
@@ -68,7 +69,7 @@ class SyncYandexController(SyncController):
                 logger.info(f"[{self.service_name}] Detected {change_type} file: {file_path}. Processing in cloud.")
 
                 method = getattr(self.cloud_sync, action["method"])
-                response = method(file_path)
+                response = method(os.path.basename(file_path) if action["method"] == "deleted" else file_path)
 
                 self._process_response(response, action, file_path)
 
@@ -77,7 +78,7 @@ class SyncYandexController(SyncController):
 
     def start(self):
         logger.info(f"[{self.service_name}] Starting folder monitoring and sync process.")
-        self._sync_initial_files()
+        self._sync_initial_state()
         self.folder_monitor.start_monitoring(self.handle_changes)
 
     def stop(self):
@@ -96,7 +97,10 @@ class SyncYandexController(SyncController):
             logger.info(
                 f"[{self.service_name}] {action['error_message']} for {file_path}: {response.status_code}, {response.json()}.")
 
-    def _sync_initial_files(self):
-        logger.info('Synchronizing files')
+    def _sync_initial_state(self):
+        logger.info(f"[{self.service_name}] Started initial synchronising process")
+
+
+
         current_files = self.folder_monitor.get_folder_state()
-        self.cloud_sync.get_file_me
+        logger.info(f"[{self.service_name}] files synchronised")
