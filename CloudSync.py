@@ -4,6 +4,7 @@ import requests
 import os
 
 from requests import Response
+from typing import List, Dict
 
 
 class CloudSync(ABC):
@@ -114,14 +115,35 @@ class YandexDriveCloud(CloudSync):
 
         return delete_response
 
-    def get_info(self):
+    def get_info(self, limit: int = 100, offset: int = 0) -> list:
         """
-        Retrieves information about all files in the Yandex Disk folder.
+        Retrieves all files from the specified folder on Yandex Disk in a paginated manner.
 
-        Note: This method should be implemented to return file details.
+        Args:
+            limit (int): Maximum number of files to retrieve in one request. Default is 100.
+            offset (int): Number of files to skip from the beginning of the list. Default is 0.
 
         Returns:
-            None
+            list: List of files' metadata from the specified folder.
         """
-        pass
+        all_files = []
+
+        while True:
+            params = {
+                'path': self.yandex_folder,
+                'limit': limit,
+                'offset': offset,
+                'fields': '_embedded.items.name,_embedded.items.path,_embedded.items.type'
+            }
+            response = requests.get(self.api_url, headers=self.headers, params=params)
+            response.raise_for_status()
+
+            files = response.json().get('_embedded', {}).get('items', [])
+            all_files.extend(files)
+
+            if len(files) < limit:
+                break
+            offset += limit
+
+        return all_files
 
