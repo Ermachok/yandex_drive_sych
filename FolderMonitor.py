@@ -38,7 +38,9 @@ class FolderMonitor:
                 folder_state[file_path] = os.path.getmtime(file_path)
         return folder_state
 
-    def has_folder_changed(self) -> Tuple[bool, Dict[str, float], List[Tuple[str, str]]]:
+    def has_folder_changed(
+        self,
+    ) -> Tuple[bool, Dict[str, float], List[Tuple[str, str]]]:
         """
         Checks for changes in the folder by comparing the current state to the previous state.
 
@@ -74,7 +76,9 @@ class FolderMonitor:
                                            This function should accept a list of change tuples as a parameter.
         """
         self.monitoring = True
-        self.monitoring_thread = threading.Thread(target=self._monitor, args=(on_change_callback,))
+        self.monitoring_thread = threading.Thread(
+            target=self._monitor, args=(on_change_callback,)
+        )
         self.monitoring_thread.start()
 
     def stop_monitoring(self) -> None:

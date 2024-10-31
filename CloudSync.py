@@ -4,7 +4,6 @@ import requests
 import os
 
 from requests import Response
-from typing import List, Dict
 
 
 class CloudSync(ABC):
@@ -35,7 +34,9 @@ class YandexDriveCloud(CloudSync):
     and delete files using Yandex Disk's REST API.
     """
 
-    def __init__(self, cloud_service_name: str, api_token: str, yandex_drive_folder: str):
+    def __init__(
+        self, cloud_service_name: str, api_token: str, yandex_drive_folder: str
+    ):
         """
         Initializes the YandexDriveCloud with the specified service name, API token, and folder path.
 
@@ -47,8 +48,8 @@ class YandexDriveCloud(CloudSync):
         super().__init__(cloud_service_name)
         self.api_token = api_token
         self.yandex_folder = yandex_drive_folder
-        self.headers = {'Authorization': f'OAuth {self.api_token}'}
-        self.api_url = 'https://cloud-api.yandex.net/v1/disk/resources'
+        self.headers = {"Authorization": f"OAuth {self.api_token}"}
+        self.api_url = "https://cloud-api.yandex.net/v1/disk/resources"
 
     def get_upload_url(self, file_path: str) -> str:
         """
@@ -62,11 +63,13 @@ class YandexDriveCloud(CloudSync):
         """
         upload_url_request = f"{self.api_url}/upload"
         file_name = os.path.basename(file_path)
-        downloading_path = f'{self.yandex_folder}/{file_name}'
+        downloading_path = f"{self.yandex_folder}/{file_name}"
 
-        params = {'path': downloading_path, 'overwrite': 'true'}
-        response = requests.get(upload_url_request, headers=self.headers, params=params)
-        upload_link = response.json().get('href')
+        params = {"path": downloading_path, "overwrite": "true"}
+        response = requests.get(
+            upload_url_request, headers=self.headers, params=params
+        )
+        upload_link = response.json().get("href")
 
         return upload_link
 
@@ -81,8 +84,8 @@ class YandexDriveCloud(CloudSync):
             Response: The HTTP response from the upload request.
         """
         upload_link = self.get_upload_url(file_path)
-        with open(file_path, 'rb') as f:
-            upload_response = requests.put(upload_link, files={'file': f})
+        with open(file_path, "rb") as f:
+            upload_response = requests.put(upload_link, files={"file": f})
 
         return upload_response
 
@@ -108,10 +111,12 @@ class YandexDriveCloud(CloudSync):
         Returns:
             Response: The HTTP response from the delete request.
         """
-        deleting_path = f'{self.yandex_folder}/{file_name}'
+        deleting_path = f"{self.yandex_folder}/{file_name}"
 
-        params = {'path': deleting_path, 'permanently': 'True'}
-        delete_response = requests.delete(self.api_url, headers=self.headers, params=params)
+        params = {"path": deleting_path, "permanently": "True"}
+        delete_response = requests.delete(
+            self.api_url, headers=self.headers, params=params
+        )
 
         return delete_response
 
@@ -130,15 +135,17 @@ class YandexDriveCloud(CloudSync):
 
         while True:
             params = {
-                'path': self.yandex_folder,
-                'limit': limit,
-                'offset': offset,
-                'fields': '_embedded.items.name,_embedded.items.path,_embedded.items.type'
+                "path": self.yandex_folder,
+                "limit": limit,
+                "offset": offset,
+                "fields": "_embedded.items.name,_embedded.items.path,_embedded.items.type",
             }
-            response = requests.get(self.api_url, headers=self.headers, params=params)
+            response = requests.get(
+                self.api_url, headers=self.headers, params=params
+            )
             response.raise_for_status()
 
-            files = response.json().get('_embedded', {}).get('items', [])
+            files = response.json().get("_embedded", {}).get("items", [])
             all_files.extend(files)
 
             if len(files) < limit:
@@ -146,4 +153,3 @@ class YandexDriveCloud(CloudSync):
             offset += limit
 
         return all_files
-
